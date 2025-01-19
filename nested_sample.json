@@ -1,0 +1,18 @@
+{
+  "Microsoft.Insights": {
+    "scheduledQueryRules": {
+      "criteria": {
+        "allOf": [
+          {
+            "field": "Microsoft.Insights/scheduledQueryRules/criteria.allOf[*].query",
+            "equals": "hello"
+          },
+          {
+            "field": "anotherField",
+            "equals": "do_not_replace"
+          }
+        ]
+      }
+    }
+  }
+}

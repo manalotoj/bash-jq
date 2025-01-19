@@ -1,0 +1,28 @@
+{
+  "name": "new",
+  "age": 30,
+  "inner": {
+    "name": "newest",
+    "age": 20
+  },
+  "additional": [
+    {
+      "name": "new_value",
+      "age": 20
+    },
+    {
+      "name": "new_value",
+      "age": 20
+    },
+    {
+      "inner": {
+        "name": "newest",
+        "age": 20,
+        "inner": {
+          "name": "newest",
+          "age": 20
+        }
+      }
+    }
+  ]
+}
