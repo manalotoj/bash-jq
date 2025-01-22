@@ -170,5 +170,6 @@ resource PolicySetDefinitions 'Microsoft.Authorization/policySetDefinitions@2020
   }
 }]
 
+
 output policyDefinitionNames array = [for policy in policyDefinitions: policy.name]
 output policySetDefinitionNames array = [for policy in policySetDefinitions: policy.name]
