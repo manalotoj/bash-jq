@@ -19,7 +19,6 @@ usage() {
     echo "  Inserts 'Inserted line 1' and 'Inserted line 2' before line 3 of myfile.txt."
     echo ""
     echo "Notes:"
-    echo "  - The script creates a backup of the original file with a .bak extension."
     echo "  - Ensure the file exists and is writable before running the script."
     echo "  - The <line_number> must be an integer."
     echo "  - Valid values for <'before'|'after'> are 'before' or 'after'."
@@ -71,7 +70,13 @@ else
 $TEXT"
 fi
 
-# Apply the sed command to modify the file
-sed -i -e "$SED_COMMAND" "$FILE"
+# Detect platform and apply the sed command accordingly
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' -e "$SED_COMMAND" "$FILE"
+else
+    # Linux
+    sed -i -e "$SED_COMMAND" "$FILE"
+fi
 
-echo "Text has been inserted into '$FILE'. A backup has been created as '$FILE.bak'."
+echo "Text has been inserted into '$FILE'."
