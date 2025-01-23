@@ -46,10 +46,10 @@ process_file() {
     local file="$1"
     if [[ -f "$file" ]]; then
         case "$platform" in
-            mac|linux)
-                sed -i "s/${search_text}/${replace_text}/g" "$file" ;;
-            gitbash)
-                sed -i.bak "s/${search_text}/${replace_text}/g" "$file" && rm -f "${file}.bak" ;;
+            mac)
+                sed -i '' "s/${search_text}/${replace_text}/g" "$file" ;; # macOS `sed` requires an empty '' after -i
+            linux|gitbash)
+                sed -i "s/${search_text}/${replace_text}/g" "$file" ;;   # Linux/Git Bash `sed` works as-is
             *)
                 echo "Unsupported platform: $platform"
                 exit 1 ;;
