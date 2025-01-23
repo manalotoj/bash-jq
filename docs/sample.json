@@ -1,8 +1,8 @@
 {
-  "name": "new",
+  "name": "joe",
   "age": 30,
   "inner": {
-    "name": "newest",
+    "name": "joe",
     "age": 20
   },
   "additional": [
@@ -16,10 +16,10 @@
     },
     {
       "inner": {
-        "name": "newest",
+        "name": "joe",
         "age": 20,
         "inner": {
-          "name": "newest",
+          "name": "joe",
           "age": 20
         }
       }
