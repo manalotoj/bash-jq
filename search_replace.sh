@@ -14,6 +14,17 @@ usage() {
     exit 1
 }
 
+# Detect the platform (macOS, Linux, Git Bash)
+detect_platform() {
+    uname_out="$(uname -s)"
+    case "${uname_out}" in
+        Linux*)     platform="linux";;
+        Darwin*)    platform="mac";;
+        CYGWIN*|MINGW*|MSYS*) platform="gitbash";;
+        *)          platform="unknown";;
+    esac
+}
+
 # Parse input arguments
 while getopts "s:r:f:d:" opt; do
     case $opt in
@@ -34,12 +45,23 @@ fi
 process_file() {
     local file="$1"
     if [[ -f "$file" ]]; then
-        sed -i '' "s/${search_text}/${replace_text}/g" "$file"
+        case "$platform" in
+            mac|linux)
+                sed -i "s/${search_text}/${replace_text}/g" "$file" ;;
+            gitbash)
+                sed -i.bak "s/${search_text}/${replace_text}/g" "$file" && rm -f "${file}.bak" ;;
+            *)
+                echo "Unsupported platform: $platform"
+                exit 1 ;;
+        esac
         echo "Processed file: $file"
     else
         echo "Skipping non-file: $file"
     fi
 }
+
+# Detect platform
+detect_platform
 
 # Process a single file
 if [[ -n "$file_path" ]]; then
@@ -54,7 +76,7 @@ fi
 # Process files in a directory
 if [[ -n "$dir_path" ]]; then
     if [[ -d "$dir_path" ]]; then
-        export search_text replace_text
+        export search_text replace_text platform
         export -f process_file
         find "$dir_path" -type f -exec bash -c 'process_file "$1"' _ {} \;
     else
