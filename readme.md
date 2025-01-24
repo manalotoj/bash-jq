@@ -62,7 +62,7 @@ Note that Bash history must be disabled and subsequently enabled before invoking
 
 ```bash
 set +H # disable history expansion
-./script.sh -t directory/file.json \
+./json_replace_complex.sh -t directory/file.json \
             -f '.properties.policyRule.then.details.existenceCondition.allOf[] | select(.field == "Microsoft.Insights/scheduledQueryRules/criteria.allOf[*].query") | .equals' \
             -v "new_query_value"
 set -H # enable history expansion
