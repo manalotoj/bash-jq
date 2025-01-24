@@ -1,26 +1,26 @@
 {
-  "name": "joe",
-  "age": 30,
+  "name": "root-joe",
+  "age": "10000",
   "inner": {
-    "name": "joe",
-    "age": 20
+    "name": "inner-name",
+    "age": "100"
   },
   "additional": [
     {
-      "name": "new_value",
-      "age": 20
+      "name": "all-other-joe",
+      "age": "1111"
     },
     {
-      "name": "new_value",
-      "age": 20
+      "name": "all-other-joe",
+      "age": "1111"
     },
     {
       "inner": {
-        "name": "joe",
-        "age": 20,
+        "name": "inner-name",
+        "age": "100",
         "inner": {
-          "name": "joe",
-          "age": 20
+          "name": "inner-name",
+          "age": "100"
         }
       }
     }
