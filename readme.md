@@ -33,6 +33,9 @@ Perform search and replace. Target files are treated as plain text.
 
 ### json_replace_complex.sh
 Perform per element replacement of a matched field's value. Use this to replace KQL queries in json files.
+- To replace all root level fields with a given name, use -p '[feild-name]'
+- To replace all fields at all levels including root, use -p '..[field-name]'
+- To replace all fields of a given parent at all levels, use -p '..[parent-name].[child-name]'
 
 #### Fully qualified filter path
 Replace the value of a fully qualified field in a file with a simple text value.
