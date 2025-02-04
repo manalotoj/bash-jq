@@ -28,7 +28,20 @@ Perform search and replace. Target files are treated as plain text.
 
 #### Simple field value replacement.
 ```bash
-./json_replace.sh -t target/sample.json -p "..inner.name" -v "new value"
+./json_replace.sh -t '/Users/johnmanaloto/source/github/amba/amba-source/services/KeyVault/vaults' -p '..alertResourceGroupName.defaultValue' -v 'new-rg-name'
+```
+
+#### Fully qualified path
+```bash
+./json_replace.sh  -t '/Users/johnmanaloto/source/github/amba/amba-source/services/Compute/virtualMachines' -p '.properties.policyRule.then.details.deployment.properties.template.resources[0].properties.description' -x 'IBM~'
+```
+
+```bash
+./json_replace.sh -t '/Users/johnmanaloto/source/github/amba/amba-source/services/Compute/virtualMachines' -p '.properties.policyRule.then.details.deployment.properties.template.resources[1].properties.template.resources[0].properties.description' -x 'IBM~'
+```
+
+```bash
+./json_replace.sh -t '/Users/johnmanaloto/source/github/amba/amba-source/services/KeyVault/vaults' -p '.properties.policyRule.then.details.deployment.properties.template.resources[1].properties.template.resources[0].properties.description' -x 'IBM~'
 ```
 
 ### json_replace_complex.sh

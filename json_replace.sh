@@ -21,74 +21,99 @@ process_json_file() {
 
   # Validate JSON structure
   echo "Debug: Validating JSON structure of file: $file"
-  jq . "$file" > /dev/null 2>&1
-  if [[ $? -ne 0 ]]; then
-    echo "Error: Invalid JSON in file '$file'. Please fix the JSON structure."
+  if ! jq . "$file" >/dev/null 2>&1; then
+    echo "Error: Invalid JSON in file '$file'. Please fix the JSON first."
     return 1
   fi
 
-  # Construct jq filter dynamically
   local jq_filter
+
+  # --------------------------------------------------------------------------
+  # 1) If path starts with '..', preserve your original "walk(...)" recursion
+  # --------------------------------------------------------------------------
   if [[ "$jsonpath" == ..* ]]; then
-    # Recursive path: Use walk to traverse all objects
-    local field="${jsonpath#..}"  # Remove leading '..'
+    local field="${jsonpath#..}"  # remove leading '..'
     if [[ "$field" == *.* ]]; then
-      # Handle nested fields (e.g., ..parent.child)
-      local parent="${field%.*}"  # Extract parent (e.g., parent)
-      local child="${field#*.}"  # Extract child (e.g., child)
+      # example: "..parent.child"
+      local parent="${field%.*}"
+      local child="${field#*.}"
       if [[ -n "$prefix" || -n "$suffix" ]]; then
-        jq_filter="walk(if type == \"object\" and has(\"$parent\") and (.[\"$parent\"] | has(\"$child\")) then .[\"$parent\"][\"$child\"] |= (\$prefix + . + \$suffix) else . end)"
+        jq_filter="walk(
+          if type == \"object\" and has(\"$parent\") and (.[\"$parent\"] | has(\"$child\"))
+          then .[\"$parent\"][\"$child\"] |= (\$prefix + . + \$suffix)
+          else .
+          end
+        )"
       elif [[ -n "$new_value" ]]; then
-        jq_filter="walk(if type == \"object\" and has(\"$parent\") and (.[\"$parent\"] | has(\"$child\")) then .[\"$parent\"][\"$child\"] = \$value else . end)"
+        jq_filter="walk(
+          if type == \"object\" and has(\"$parent\") and (.[\"$parent\"] | has(\"$child\"))
+          then .[\"$parent\"][\"$child\"] = \$value
+          else .
+          end
+        )"
       fi
     else
-      # Handle single fields (e.g., ..field)
+      # example: "..someField"
       if [[ -n "$prefix" || -n "$suffix" ]]; then
-        jq_filter="walk(if type == \"object\" and has(\"$field\") then .[\"$field\"] |= (\$prefix + . + \$suffix) else . end)"
+        jq_filter="walk(
+          if type == \"object\" and has(\"$field\")
+          then .[\"$field\"] |= (\$prefix + . + \$suffix)
+          else .
+          end
+        )"
       elif [[ -n "$new_value" ]]; then
-        jq_filter="walk(if type == \"object\" and has(\"$field\") then .[\"$field\"] = \$value else . end)"
+        jq_filter="walk(
+          if type == \"object\" and has(\"$field\")
+          then .[\"$field\"] = \$value
+          else .
+          end
+        )"
       fi
     fi
+
+  # --------------------------------------------------------------------------
+  # 2) Otherwise, treat the path as a direct jq expression,
+  #    but update **only if** it already exists (skip creation).
+  # --------------------------------------------------------------------------
   else
-    # Direct path: Update only the specified path
-    if [[ "$jsonpath" == *.* ]]; then
-      # Handle nested fields (e.g., parent.child)
-      local parent="${jsonpath%.*}"  # Extract parent
-      local child="${jsonpath#*.}"  # Extract child
-      if [[ -n "$prefix" || -n "$suffix" ]]; then
-        jq_filter="if has(\"$parent\") and (.[\"$parent\"] | has(\"$child\")) then .[\"$parent\"][\"$child\"] |= (\$prefix + . + \$suffix) else . end"
-      elif [[ -n "$new_value" ]]; then
-        jq_filter="if has(\"$parent\") and (.[\"$parent\"] | has(\"$child\")) then .[\"$parent\"][\"$child\"] = \$value else . end"
-      fi
+    if [[ -n "$prefix" || -n "$suffix" ]]; then
+      # if ($jsonpath)? != null => apply prefix/suffix
+      jq_filter="
+        if ($jsonpath)? == null
+        then .
+        else ($jsonpath) |= (\$prefix + . + \$suffix)
+        end
+      "
+    elif [[ -n "$new_value" ]]; then
+      # if ($jsonpath)? != null => set the value
+      jq_filter="
+        if ($jsonpath)? == null
+        then .
+        else ($jsonpath) = \$value
+        end
+      "
     else
-      # Handle single fields (e.g., .field)
-      if [[ -n "$prefix" || -n "$suffix" ]]; then
-        jq_filter=".[\"$jsonpath\"] |= (\$prefix + . + \$suffix)"
-      elif [[ -n "$new_value" ]]; then
-        jq_filter=".[\"$jsonpath\"] = \$value"
-      fi
+      echo "Error: Must specify either prefix/suffix or new_value."
+      return 1
     fi
   fi
 
   if [[ -z "$jq_filter" ]]; then
-    echo "Error: Failed to construct jq filter. Check inputs."
+    echo "Error: Failed to build jq filter from '$jsonpath'."
     return 1
   fi
 
   echo "Debug: Applying jq filter: $jq_filter"
 
-  # Create a temporary file
   local tmp_file
   tmp_file=$(mktemp)
 
-  # Execute jq with the dynamically constructed filter
-  echo "Debug: Running jq command:"
-  echo "jq --arg value \"$new_value\" --arg prefix \"$prefix\" --arg suffix \"$suffix\" \"$jq_filter\" \"$file\""
-
-  jq --arg value "$new_value" --arg prefix "$prefix" --arg suffix "$suffix" \
+  # Execute jq
+  jq --arg value "$new_value" \
+     --arg prefix "$prefix" \
+     --arg suffix "$suffix" \
      "$jq_filter" "$file" > "$tmp_file" 2> jq_error.log
 
-  # Handle jq errors
   if [[ $? -ne 0 ]]; then
     echo "Error: jq failed with the following error:"
     cat jq_error.log
@@ -96,7 +121,6 @@ process_json_file() {
     return 1
   fi
 
-  # Overwrite the original file with the updated content
   mv "$tmp_file" "$file"
   rm -f jq_error.log
   echo "Updated $file successfully."
